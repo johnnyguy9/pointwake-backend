@@ -1,0 +1,11 @@
+employee_id,name,age,department,years_experience,salary,performance_score
+E001,Alice,28,Engineering,3,95000,4.2
+E002,Bob,35,Engineering,8,110000,4.5
+E003,Charlie,42,Management,15,125000,4.8
+E004,Diana,31,Engineering,5,98000,4.3
+E005,Eve,29,Marketing,4,75000,3.9
+E006,Frank,38,Engineering,10,115000,4.6
+E007,Grace,33,Marketing,6,82000,4.1
+E008,Henry,45,Management,18,135000,4.9
+E009,Ivy,27,Engineering,2,88000,4.0
+E010,Jack,36,Marketing,7,85000,4.2
