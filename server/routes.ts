@@ -54,6 +54,36 @@ import {
 } from "./services/VapiIntegration";
 import { isAuthenticated, requireAccountAdmin, requireSuperAdmin, createOwnershipMiddleware } from "./middleware/permissions";
 import { UserRoles } from "@shared/schema";
+import { WakeAnalyzerService } from "./services/WakeAnalyzerService";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+// Configure multer for file uploads
+const uploadDir = process.env.WAKE_ANALYZER_UPLOAD_DIR || "/tmp/wake-analyzer-uploads";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: uploadDir,
+    filename: (req, file, cb) => {
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+      cb(null, `${uniqueSuffix}-${file.originalname}`);
+    }
+  }),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'));
+    }
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
 
 const wsClients: Map<string, Set<WebSocket>> = new Map();
 
@@ -855,6 +885,92 @@ export async function registerRoutes(
       configured: !!fromNumber,
       fromNumber: fromNumber ? `${fromNumber.slice(0, 6)}...` : null,
     });
+  });
+
+  // ============ WAKE ANALYZER ROUTES ============
+
+  // Health check for Python service
+  app.get("/api/wake-analyzer/health", isAuthenticated, async (req, res) => {
+    const health = await WakeAnalyzerService.healthCheck();
+    res.json(health);
+  });
+
+  // Upload CSV dataset
+  app.post("/api/wake-analyzer/upload", isAuthenticated, upload.single("file"), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const result = await WakeAnalyzerService.uploadDataset(req.file, req.user!);
+
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  });
+
+  // Validate execution plan
+  app.post("/api/wake-analyzer/validate", isAuthenticated, async (req, res) => {
+    const plan = req.body;
+
+    if (!plan) {
+      return res.status(400).json({ error: "No plan provided" });
+    }
+
+    const result = await WakeAnalyzerService.validatePlan(plan);
+    res.json(result);
+  });
+
+  // Execute analytics plan
+  app.post("/api/wake-analyzer/execute", isAuthenticated, async (req, res) => {
+    const { sessionId, plan } = req.body;
+
+    if (!sessionId || !plan) {
+      return res.status(400).json({ error: "sessionId and plan required" });
+    }
+
+    const result = await WakeAnalyzerService.executePlan(sessionId, plan, req.user!);
+
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  });
+
+  // Get dataset metadata
+  app.get("/api/wake-analyzer/datasets/:sessionId", isAuthenticated, async (req, res) => {
+    const dataset = await WakeAnalyzerService.getDataset(req.params.sessionId, req.user!);
+
+    if (!dataset) {
+      return res.status(404).json({ error: "Dataset not found" });
+    }
+
+    res.json(dataset);
+  });
+
+  // Get user's datasets
+  app.get("/api/wake-analyzer/datasets", isAuthenticated, async (req, res) => {
+    const datasets = await WakeAnalyzerService.getUserDatasets(req.user!);
+    res.json(datasets);
+  });
+
+  // Get analysis history for a dataset
+  app.get("/api/wake-analyzer/history/:sessionId", isAuthenticated, async (req, res) => {
+    const history = await WakeAnalyzerService.getAnalysisHistory(req.params.sessionId, req.user!);
+    res.json(history);
+  });
+
+  // Delete dataset
+  app.delete("/api/wake-analyzer/datasets/:sessionId", isAuthenticated, async (req, res) => {
+    const success = await WakeAnalyzerService.deleteDataset(req.params.sessionId, req.user!);
+
+    if (success) {
+      res.json({ success: true });
+    } else {
+      res.status(404).json({ error: "Dataset not found" });
+    }
   });
 
   return httpServer;

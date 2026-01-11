@@ -1,15 +1,16 @@
 import { useLocation, Link } from "wouter";
-import { 
-  LayoutDashboard, 
-  Phone, 
-  AlertTriangle, 
-  Building2, 
-  Users, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Phone,
+  AlertTriangle,
+  Building2,
+  Users,
+  BarChart3,
   Settings,
   LogOut,
   Headphones,
-  Shield
+  Shield,
+  Database
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,6 +37,7 @@ const managementItems = [
   { title: "Properties", url: "/properties", icon: Building2 },
   { title: "Vendors", url: "/vendors", icon: Users },
   { title: "Reports", url: "/reports", icon: BarChart3 },
+  { title: "Wake Analyzer", url: "/wake-analyzer", icon: Database },
 ];
 
 const configItems = [

@@ -297,3 +297,74 @@ export const UserAvailability = {
 } as const;
 
 export type UserAvailabilityType = typeof UserAvailability[keyof typeof UserAvailability];
+
+// ============ WAKE ANALYZER - DATASETS ============
+export const wakeAnalyzerDatasets = pgTable("wake_analyzer_datasets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  accountId: varchar("account_id").notNull().references(() => accounts.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull().unique(),
+  filename: text("filename").notNull(),
+  filePath: text("file_path").notNull(),
+  rowCount: integer("row_count").notNull(),
+  columnCount: integer("column_count").notNull(),
+  columns: jsonb("columns").$type<string[]>().notNull(),
+  columnTypes: jsonb("column_types").$type<Record<string, string>>().notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
+
+export const insertWakeAnalyzerDatasetSchema = createInsertSchema(wakeAnalyzerDatasets).omit({
+  id: true,
+  uploadedAt: true
+});
+export type InsertWakeAnalyzerDataset = z.infer<typeof insertWakeAnalyzerDatasetSchema>;
+export type WakeAnalyzerDataset = typeof wakeAnalyzerDatasets.$inferSelect;
+
+// ============ WAKE ANALYZER - ANALYSES ============
+export const wakeAnalyzerAnalyses = pgTable("wake_analyzer_analyses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  accountId: varchar("account_id").notNull().references(() => accounts.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  datasetId: varchar("dataset_id").notNull().references(() => wakeAnalyzerDatasets.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  executionPlan: jsonb("execution_plan").$type<{
+    operation: string;
+    target_column?: string;
+    filters?: any[];
+    group_by?: string[];
+    time_column?: string;
+    x_axis?: string;
+    y_axis?: string;
+    chart_type?: string;
+  }>().notNull(),
+  result: jsonb("result").$type<any>(),
+  chartData: text("chart_data"),
+  filteredRowCount: integer("filtered_row_count"),
+  executionTimeMs: integer("execution_time_ms"),
+  success: boolean("success").notNull().default(true),
+  errorMessage: text("error_message"),
+  executedAt: timestamp("executed_at").defaultNow(),
+});
+
+export const insertWakeAnalyzerAnalysisSchema = createInsertSchema(wakeAnalyzerAnalyses).omit({
+  id: true,
+  executedAt: true
+});
+export type InsertWakeAnalyzerAnalysis = z.infer<typeof insertWakeAnalyzerAnalysisSchema>;
+export type WakeAnalyzerAnalysis = typeof wakeAnalyzerAnalyses.$inferSelect;
+
+// ============ WAKE ANALYZER - OPERATION TYPES ============
+export const WakeAnalyzerOperations = {
+  MEAN: "mean",
+  SUM: "sum",
+  COUNT: "count",
+  MIN: "min",
+  MAX: "max",
+  STD: "std",
+  CORRELATION: "correlation",
+  REGRESSION: "regression",
+  FORECAST: "forecast",
+} as const;
+
+export type WakeAnalyzerOperation = typeof WakeAnalyzerOperations[keyof typeof WakeAnalyzerOperations];

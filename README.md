@@ -1,6 +1,6 @@
 # PointWake AI CallOps Platform
 
-Enterprise-grade AI-powered call operations platform with intelligent dispatch, multi-tenant support, and real-time call management.
+Enterprise-grade AI-powered call operations platform with intelligent dispatch, multi-tenant support, real-time call management, and **Wake Analyzer** data analytics.
 
 ## Quick Start
 
@@ -150,10 +150,41 @@ npm run dev
 - Check server logs for Vapi webhook events
 - Ensure `BASE_URL` is set correctly
 
+## Wake Analyzer
+
+PointWake includes **Wake Analyzer**, a conversational data analysis platform that provides:
+- CSV data upload and analysis
+- Python-powered analytics (pandas, numpy, sklearn, statsmodels)
+- Zero AI hallucination (all results from actual execution)
+- Chart generation (matplotlib, seaborn)
+- Multi-tenant data isolation
+
+### Quick Start
+
+See [WAKE_ANALYZER.md](./WAKE_ANALYZER.md) for detailed setup instructions.
+
+**Basic Setup:**
+```bash
+# Install Python dependencies
+cd wake-analyzer-service
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Start Python service
+python run.py
+
+# In another terminal, start Node.js
+npm run dev
+```
+
+Access Wake Analyzer at `/wake-analyzer` in the UI.
+
 ## Support
 
 - **Vapi Docs**: https://docs.vapi.ai
 - **Twilio Client**: https://www.twilio.com/docs/voice/client
+- **Wake Analyzer**: See [WAKE_ANALYZER.md](./WAKE_ANALYZER.md)
 
 ---
 

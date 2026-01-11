@@ -22,6 +22,7 @@ import VendorsPage from "@/pages/vendors";
 import ReportsPage from "@/pages/reports";
 import SettingsPage from "@/pages/settings";
 import AdminPage from "@/pages/admin";
+import WakeAnalyzerPage from "@/pages/wake-analyzer";
 
 function Router() {
   return (
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/reports" component={ReportsPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/admin" component={AdminPage} />
+      <Route path="/wake-analyzer" component={WakeAnalyzerPage} />
       <Route component={NotFound} />
     </Switch>
   );
